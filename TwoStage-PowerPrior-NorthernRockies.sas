@@ -277,68 +277,6 @@ run;
 %BayesPowerPrior(OUTCOME=RD,D1=EDDIM12,D2=EDDIS12,Drought="EDDIM12");
 %BayesPowerPrior(OUTCOME=RD,D1=EDDIM12,D2=EDDIS12,Drought="EDDIS12");
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-%macro choicea0(var);
-proc mcmc data=NOAA.final outpost=postoutB nmc=50000 nbi=10000 nthin=5 seed=1234 propcov=quanew DIC maxtune=30; 
-  parms alpha phi;
-  begincnst;
-    a0=&var.;
-  endcnst;
-
-  prior alpha~normal(0,var=100);
-  prior phi~normal(0,var=5);
-
-  if Group=1 then do;
-    xalpha=a0*alpha;
-	SEA=SE2+exp(phi);
-  end;
-  else if Group=2 then do;
-    xalpha=alpha+muK*exp(phi);
-    SEA=SE2;
-  end;
-
-  random muK~normal(0,var=1) subject=County;
-  model Est~normal(xalpha,var=SEA);
-run;
-%mend;
-
-%choicea0(var=0.0);
-%choicea0(var=0.1);
-%choicea0(var=0.2);
-%choicea0(var=0.3);
-%choicea0(var=0.4);
-%choicea0(var=0.5);
-%choicea0(var=0.6);
-%choicea0(var=0.7);
-%choicea0(var=0.8);
-%choicea0(var=0.9);
-%choicea0(var=1.0);
-
-
-
-
-
-
-
-
-
-
 /***********************/
 /* Rural areas fitting */
 /***********************/
@@ -481,9 +419,6 @@ run;
 %NOAA2stageRural(OUTCOME=RD,D1=SPEIM12,D2=SPEIS12,V1="SPEIM12",V2="SPEIS12",OUTPUT1=SPEI12moderate,OUTPUT2=SPEI12severe);
 %NOAA2stageRural(OUTCOME=CD,D1=SPEIM12,D2=SPEIS12,V1="SPEIM12",V2="SPEIS12",OUTPUT1=SPEI12moderate,OUTPUT2=SPEI12severe);
 %NOAA2stageRural(OUTCOME=TD,D1=SPEIM12,D2=SPEIS12,V1="SPEIM12",V2="SPEIS12",OUTPUT1=SPEI12moderate,OUTPUT2=SPEI12severe);
-
-
-
 
 /***********************/
 /* Urban areas fitting */
@@ -628,20 +563,3 @@ run;
 %NOAA2stageUrban(OUTCOME=CD,D1=SPEIM12,D2=SPEIS12,V1="SPEIM12",V2="SPEIS12",OUTPUT1=SPEI12moderate,OUTPUT2=SPEI12severe);
 %NOAA2stageUrban(OUTCOME=TD,D1=SPEIM12,D2=SPEIS12,V1="SPEIM12",V2="SPEIS12",OUTPUT1=SPEI12moderate,OUTPUT2=SPEI12severe);
 
-
-
-
-
-
-
-*ods exclude all;
-proc glimmix data=tests0;
-*  by State County;
-  where State=4;
-  by County;
-  class Year;
-  effect spl=spline(Month / naturalcubic knotmethod=equal(3));
-  model TD = Dmod Dsev spl Year TempA TempA*TempA / link = log dist=negbin solution;
-*  ods output ParameterEstimates=_para_est_S0 ConvergenceStatus=ConvergeStatus;
-run;
-*ods exclude none;
